@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="ISO-8859-1">
+    
+    <include path="functions.xml"/>
+                
+    <!-- collects all tables for individual events -->
+    <var-def name="events">    
+        <call name="download-multipage-list">
+            <call-param name="pageUrl">http://upcoming.yahoo.com/search/?search_placeid=nE22HW2eAJQaf7o-&amp;type=Events</call-param>
+            <call-param name="nextXPath">concat('/search/',(//a[contains(@href,'page=')])[last()]/@href)</call-param>
+            <call-param name="itemXPath">//*[@class="event-metadata"]</call-param>
+            <call-param name="maxloops">4</call-param>
+        </call>
+    </var-def>
+    
+    <!-- iterates over all collected events and extract desired data -->
+    <file action="write" path="c:/yahoo-events/events.xml" charset="UTF-8">
+        <![CDATA[ <YahooEvents> ]]>
+        <loop item="item" index="i">
+            <list><var name="events"/></list>
+            <body>
+                <xquery>
+                    <xq-param name="item" type="node()"><var name="item"/></xq-param>
+                    <xq-expression><![CDATA[
+                            declare variable $item as node() external;
+
+                            let $name := data($item//div[@class="event-title summary"]) 
+                      		
+                                return
+                                    <event>
+                                        <name>{normalize-space($name)}</name>
+                                          
+                                    </event>
+                    ]]></xq-expression>
+                </xquery>
+            </body>
+        </loop>
+        <![CDATA[ </YahooEvents> ]]>
+    </file>
+
+</config>
